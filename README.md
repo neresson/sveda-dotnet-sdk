@@ -10,7 +10,7 @@ NuGet: `sveda-dotnet-sdk` (C# types stay in `Sveda.Client`)
 dotnet add package sveda-dotnet-sdk
 ```
 
-Until NuGet, project-reference the checkout:
+From a local checkout:
 
 ```xml
 <ProjectReference Include="..\sveda-dotnet-sdk\src\Sveda.Client\Sveda.Client.csproj" />
