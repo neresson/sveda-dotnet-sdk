@@ -9,11 +9,11 @@
     <RootNamespace>Sveda.Client</RootNamespace>
     <AssemblyName>Sveda.Client</AssemblyName>
     <PackageId>sveda-dotnet-sdk</PackageId>
-    <Version>0.1.0</Version>
+    <Version>0.1.1</Version>
     <Authors>Neresson</Authors>
     <Description>SDK for the Sveda AI sidecar HTTP API (embed tokens, streaming chat, histories).</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <PackageProjectUrl>https://github.com/neresson/sveda-dotnet-sdk</PackageProjectUrl>
+    <PackageProjectUrl>https://sveda.dev/docs/hosts/dotnet</PackageProjectUrl>
     <RepositoryUrl>https://github.com/neresson/sveda-dotnet-sdk</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageReadmeFile>README.md</PackageReadmeFile>

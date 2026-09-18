@@ -1,6 +1,8 @@
 # sveda-dotnet-sdk
 
-.NET SDK for the [Sveda AI](https://github.com/neresson/sveda) sidecar HTTP API.
+.NET SDK for the [Sveda](https://sveda.dev) sidecar HTTP API.
+
+Docs: [sveda.dev/docs/hosts/dotnet](https://sveda.dev/docs/hosts/dotnet)
 
 NuGet: `sveda-dotnet-sdk` (C# types stay in `Sveda.Client` and `Sveda.Host`)
 
