@@ -9,10 +9,10 @@
     <RootNamespace>Sveda.Client</RootNamespace>
     <AssemblyName>Sveda.Client</AssemblyName>
     <PackageId>sveda-dotnet-sdk</PackageId>
-    <Version>0.1.2</Version>
+    <Version>0.2.0</Version>
     <Authors>Neresson</Authors>
     <Description>Embed a Sveda AI agent from .NET / ASP.NET Core. https://sveda.dev/docs/hosts/dotnet</Description>
-    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageLicenseExpression>AGPL-3.0-only</PackageLicenseExpression>
     <PackageProjectUrl>https://sveda.dev/docs/hosts/dotnet</PackageProjectUrl>
     <RepositoryUrl>https://github.com/neresson/sveda-dotnet-sdk</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
