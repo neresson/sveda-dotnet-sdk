@@ -3,6 +3,7 @@ name: Publish
 on:
   push:
     tags: ["v*"]
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -22,7 +23,8 @@ jobs:
         uses: NuGet/login@v1
         id: login
         with:
-          user: ${{ secrets.NUGET_USER }}
+          # nuget.org profile name, not email. Override with NUGET_USER if needed.
+          user: ${{ secrets.NUGET_USER != '' && secrets.NUGET_USER || 'neresson' }}
       - name: Push to NuGet
         run: >
           dotnet nuget push artifacts/*.nupkg
