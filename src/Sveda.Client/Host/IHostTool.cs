@@ -12,5 +12,7 @@ public interface IHostTool
 
     string Domain { get; }
 
+    string Confirmation => "auto";
+
     Task<object?> HandleAsync(IReadOnlyDictionary<string, object?> arguments, HostCallContext context, CancellationToken cancellationToken = default);
 }

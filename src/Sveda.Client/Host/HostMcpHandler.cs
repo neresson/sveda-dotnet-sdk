@@ -110,6 +110,12 @@ public static class HostMcpHandler
             ? new Dictionary<string, object?> { ["type"] = "object", ["properties"] = new Dictionary<string, object?>() }
             : tool.InputSchema;
 
+        var meta = new Dictionary<string, object?> { ["domain"] = tool.Domain, ["mode"] = tool.Mode };
+        if (tool.Confirmation == "required")
+        {
+            meta["confirmation"] = "required";
+        }
+
         return new Dictionary<string, object?>
         {
             ["name"] = tool.Name,
@@ -117,7 +123,7 @@ public static class HostMcpHandler
             ["description"] = tool.Description,
             ["inputSchema"] = schema,
             ["annotations"] = Annotations(tool.Mode),
-            ["_meta"] = new Dictionary<string, object?> { ["domain"] = tool.Domain, ["mode"] = tool.Mode },
+            ["_meta"] = meta,
         };
     }
 

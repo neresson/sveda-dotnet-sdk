@@ -7,12 +7,13 @@ namespace Sveda.Client.Tests;
 
 public sealed class HostMcpTests
 {
-    private sealed class EchoTool : IHostTool
+    private class EchoTool : IHostTool
     {
-        public string Name => "echo_message";
+        public virtual string Name => "echo_message";
         public string Description => "Echo a message back.";
-        public string Mode => HostModes.Read;
+        public virtual string Mode => HostModes.Read;
         public string Domain => "demo";
+        public virtual string Confirmation => "auto";
         public IReadOnlyDictionary<string, object?> InputSchema => HostToolSchema.Object(new Dictionary<string, Dictionary<string, object?>>
         {
             ["message"] = new Dictionary<string, object?> { ["type"] = "string", ["description"] = "Message to echo", ["required"] = true },
@@ -158,6 +159,7 @@ public sealed class HostMcpTests
         Assert.Single(tools);
         Assert.Equal("echo_message", tools[0]!["name"]!.GetValue<string>());
         Assert.Equal("demo", tools[0]!["_meta"]!["domain"]!.GetValue<string>());
+        Assert.False(tools[0]!["_meta"]!.AsObject().ContainsKey("confirmation"));
 
         var call = await InvokeAsync(host, token, "tools/call", new JsonObject
         {
@@ -169,6 +171,27 @@ public sealed class HostMcpTests
         var text = call.Body!["result"]!["content"]![0]!["text"]!.GetValue<string>();
         using var document = JsonDocument.Parse(text);
         Assert.Equal("hello", document.RootElement.GetProperty("data").GetProperty("message").GetString());
+    }
+
+    [Fact]
+    public async Task ConfirmationMetaIsPublishedWhenRequired()
+    {
+        var host = new HostManager();
+        host.ResolveToolsUsing(() => [new EchoTool(), new DeleteTool()]);
+        var token = host.DefaultMintToken(new Dictionary<string, object?> { ["id"] = "user-1" });
+
+        var list = await InvokeAsync(host, token, "tools/list", new JsonObject());
+        var tools = list.Body!["result"]!["tools"]!.AsArray().ToDictionary(tool => tool!["name"]!.GetValue<string>());
+        Assert.False(tools["echo_message"]!["_meta"]!.AsObject().ContainsKey("confirmation"));
+        Assert.Equal("required", tools["delete_post"]!["_meta"]!["confirmation"]!.GetValue<string>());
+        Assert.Equal("delete", tools["delete_post"]!["_meta"]!["mode"]!.GetValue<string>());
+    }
+
+    private sealed class DeleteTool : EchoTool
+    {
+        public override string Name => "delete_post";
+        public override string Mode => HostModes.Delete;
+        public override string Confirmation => "required";
     }
 
     private static async Task<HostMcpResult> InvokeAsync(HostManager host, string token, string method, JsonObject parameters, int id = 1)
