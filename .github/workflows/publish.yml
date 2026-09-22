@@ -31,3 +31,12 @@ jobs:
           --api-key ${{ steps.login.outputs.NUGET_API_KEY }}
           --source https://api.nuget.org/v3/index.json
           --skip-duplicate
+
+      - name: Trigger sveda SDK compatibility matrix
+        if: ${{ secrets.SVEDA_REPO_DISPATCH_TOKEN != '' }}
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ secrets.SVEDA_REPO_DISPATCH_TOKEN }}
+          repository: neresson/sveda
+          event-type: sdk-release
+          client-payload: '{"sdk":"dotnet","version":"${{ github.ref_name }}"}'
