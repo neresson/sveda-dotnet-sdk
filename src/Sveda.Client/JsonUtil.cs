@@ -75,6 +75,12 @@ internal static class JsonUtil
             payload["host_mcp_token"] = mcpToken;
         }
 
+        var policy = request.Policy?.Trim();
+        if (!string.IsNullOrEmpty(policy))
+        {
+            payload["policy"] = policy;
+        }
+
         return payload;
     }
 }

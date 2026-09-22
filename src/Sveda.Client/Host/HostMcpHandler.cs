@@ -31,7 +31,7 @@ public static class HostMcpHandler
         if (method == "tools/list")
         {
             var perPage = Math.Clamp(parameters["per_page"]?.GetValue<int?>() ?? parameters["perPage"]?.GetValue<int?>() ?? 250, 1, 250);
-            var tools = host.ResolveTools().Select(ToMcpTool).ToList();
+            var tools = host.ResolveTools(context.User).Select(ToMcpTool).ToList();
             var start = CursorStart(parameters);
             var slice = tools.Skip(start).Take(perPage).ToList();
             var result = new JsonObject { ["tools"] = JsonSerializer.SerializeToNode(slice) };
@@ -47,7 +47,7 @@ public static class HostMcpHandler
         {
             var name = parameters["name"]?.GetValue<string>() ?? "";
             var arguments = ReadArguments(parameters["arguments"]);
-            var tool = host.ResolveTools().FirstOrDefault(candidate => candidate.Name == name);
+            var tool = host.ResolveTools(context.User).FirstOrDefault(candidate => candidate.Name == name);
             if (tool is null)
             {
                 return JsonRpc(200, id, new JsonObject

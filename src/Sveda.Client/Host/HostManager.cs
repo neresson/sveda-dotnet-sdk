@@ -6,7 +6,8 @@ public sealed class HostManager
 {
     private readonly HostManagerOptions options;
     private readonly McpTokenStore tokenStore;
-    private Func<IReadOnlyList<IHostTool>>? resolveToolsUsing;
+    private Func<object?, IReadOnlyList<IHostTool>>? resolveToolsUsing;
+    private Func<object?, string?>? policyUsing;
     private Func<object?, string>? visitorIdUsing;
     private Func<object?, Task<string>>? mintTokenUsing;
     private Func<string, Task<HostAuth?>>? verifyBearerUsing;
@@ -31,7 +32,13 @@ public sealed class HostManager
 
     public McpTokenStore TokenStore => tokenStore;
 
-    public void ResolveToolsUsing(Func<IReadOnlyList<IHostTool>> callback) => resolveToolsUsing = callback;
+    public void ResolveToolsUsing(Func<IReadOnlyList<IHostTool>> callback)
+        => resolveToolsUsing = _ => callback();
+
+    public void ResolveToolsUsing(Func<object?, IReadOnlyList<IHostTool>> callback)
+        => resolveToolsUsing = callback;
+
+    public void PolicyUsing(Func<object?, string?> callback) => policyUsing = callback;
 
     public void VisitorIdUsing(Func<object?, string> callback) => visitorIdUsing = callback;
 
@@ -45,14 +52,32 @@ public sealed class HostManager
 
     public void RegisterTool(IHostTool tool) => registeredTools.Add(tool);
 
-    public IReadOnlyList<IHostTool> ResolveTools()
+    public IReadOnlyList<IHostTool> ResolveTools() => ResolveTools(null);
+
+    public IReadOnlyList<IHostTool> ResolveTools(object? user)
     {
         if (resolveToolsUsing is not null)
         {
-            return resolveToolsUsing();
+            return resolveToolsUsing(user);
         }
 
         return registeredTools;
+    }
+
+    public string? PolicyFor(object? user)
+    {
+        if (policyUsing is null)
+        {
+            return null;
+        }
+
+        var value = policyUsing(user);
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return null;
+        }
+
+        return value.Trim();
     }
 
     public bool IsConfigured()
@@ -97,6 +122,7 @@ public sealed class HostManager
             VisitorId = visitorId,
             HostMcpUrl = mcpUrl,
             HostMcpToken = mcpToken,
+            Policy = PolicyFor(user),
         }, cancellationToken).ConfigureAwait(false);
     }
 
@@ -154,7 +180,7 @@ public sealed class HostManager
         return new HostManagerOptions
         {
             BaseUrl = TrimSlash(source.BaseUrl),
-            HostApiKey = source.HostApiKey.Trim(),
+            HostApiKey = (source.HostApiKey ?? "").Trim(),
             McpUrl = TrimSlash(source.McpUrl),
             McpPath = NormalizePath(source.McpPath),
             ServerName = string.IsNullOrWhiteSpace(source.ServerName) ? "Host Application" : source.ServerName,

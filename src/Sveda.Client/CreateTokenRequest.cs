@@ -7,4 +7,6 @@ public sealed class CreateTokenRequest
     public string? HostMcpUrl { get; set; }
 
     public string? HostMcpToken { get; set; }
+
+    public string? Policy { get; set; }
 }

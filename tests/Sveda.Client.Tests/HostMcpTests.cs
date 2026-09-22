@@ -51,6 +51,79 @@ public sealed class HostMcpTests
     }
 
     [Fact]
+    public async Task StartSessionSendsPolicy()
+    {
+        var handler = new StubHandler
+        {
+            JsonBody = """{"token":"embed-token","visitor_id":"aspnet-playground","expires_in":3600}""",
+        };
+
+        var host = new HostManager(new HostManagerOptions
+        {
+            BaseUrl = "https://sveda.test",
+            HostApiKey = "host-secret",
+            McpUrl = "https://app.test/mcp/sveda",
+            HttpMessageHandler = handler,
+        });
+        host.ResolveToolsUsing(() => [new EchoTool()]);
+        host.PolicyUsing(_ => "reader");
+
+        var session = await host.StartSessionAsync(new Dictionary<string, object?> { ["id"] = "aspnet-playground" });
+
+        Assert.Equal("embed-token", session.Token);
+        var recorded = Assert.Single(handler.Requests);
+        Assert.Contains("\"policy\":\"reader\"", recorded.Body);
+    }
+
+    [Fact]
+    public async Task ToolsCallFiltersByAuthenticatedUser()
+    {
+        var host = new HostManager();
+        host.ResolveToolsUsing(user =>
+        {
+            if (user is IReadOnlyDictionary<string, object?> map
+                && map.TryGetValue("id", out var id)
+                && Convert.ToString(id) == "user-1")
+            {
+                return [new EchoTool()];
+            }
+
+            return [];
+        });
+
+        var allowedToken = host.DefaultMintToken(new Dictionary<string, object?> { ["id"] = "user-1" });
+        var deniedToken = host.DefaultMintToken(new Dictionary<string, object?> { ["id"] = "other" });
+
+        var allowed = await InvokeAsync(host, allowedToken, "tools/call", new JsonObject
+        {
+            ["name"] = "echo_message",
+            ["arguments"] = new JsonObject { ["message"] = "hello" },
+        });
+        Assert.False(allowed.Body!["result"]!["isError"]!.GetValue<bool>());
+
+        var denied = await InvokeAsync(host, deniedToken, "tools/call", new JsonObject
+        {
+            ["name"] = "echo_message",
+            ["arguments"] = new JsonObject { ["message"] = "hello" },
+        }, 2);
+        Assert.True(denied.Body!["result"]!["isError"]!.GetValue<bool>());
+        Assert.Contains("Unknown tool", denied.Body!["result"]!["content"]![0]!["text"]!.GetValue<string>());
+    }
+
+    [Fact]
+    public async Task ZeroArgResolveToolsCallbackStillWorks()
+    {
+        var host = new HostManager();
+        host.ResolveToolsUsing(() => [new EchoTool()]);
+        var token = host.DefaultMintToken(new Dictionary<string, object?> { ["id"] = "user-1" });
+
+        var list = await InvokeAsync(host, token, "tools/list", new JsonObject { ["per_page"] = 250 });
+        var tools = list.Body!["result"]!["tools"]!.AsArray();
+        Assert.Single(tools);
+        Assert.Equal("echo_message", tools[0]!["name"]!.GetValue<string>());
+    }
+
+    [Fact]
     public async Task InitializeReportsConfiguredNameAndInstructions()
     {
         var host = new HostManager(new HostManagerOptions
