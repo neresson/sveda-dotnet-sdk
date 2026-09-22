@@ -59,6 +59,10 @@ By default, `HostManager` mints opaque MCP bearer tokens with an in-memory store
 
 Implement `IHostTool` with `Name`, `Description`, `InputSchema`, `Mode`, `Domain`, and `HandleAsync`.
 
+## Agent introspection
+
+`host.Describe(user)` and `HostManifest.DescribeJson(host, user)` emit the `sveda.host/v1` manifest (same tool payloads as MCP `tools/list`). Call from a minimal endpoint or test once DI is wired.
+
 ## License
 
 GNU Affero General Public License v3.0. See [LICENSE](LICENSE).

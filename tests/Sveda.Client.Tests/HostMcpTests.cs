@@ -187,6 +187,27 @@ public sealed class HostMcpTests
         Assert.Equal("delete", tools["delete_post"]!["_meta"]!["mode"]!.GetValue<string>());
     }
 
+    [Fact]
+    public async Task DescribeMatchesMcpToolsList()
+    {
+        var host = new HostManager();
+        host.ResolveToolsUsing(_ => [new EchoTool()]);
+        var user = new Dictionary<string, object?> { ["id"] = "user-1" };
+
+        var manifest = host.Describe(user);
+        Assert.Equal(HostManifest.Schema, manifest["schema"]!.GetValue<string>());
+
+        var token = host.DefaultMintToken(user);
+        var list = await InvokeAsync(host, token, "tools/list", new JsonObject { ["per_page"] = 250 });
+        var listed = list.Body!["result"]!["tools"]!.AsArray().ToDictionary(tool => tool!["name"]!.GetValue<string>());
+
+        foreach (var tool in manifest["tools"]!.AsArray())
+        {
+            var name = tool!["name"]!.GetValue<string>();
+            Assert.Equal(listed[name]!["description"]!.GetValue<string>(), tool["description"]!.GetValue<string>());
+        }
+    }
+
     private sealed class DeleteTool : EchoTool
     {
         public override string Name => "delete_post";

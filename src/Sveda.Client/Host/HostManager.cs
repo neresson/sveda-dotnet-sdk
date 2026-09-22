@@ -1,3 +1,4 @@
+using System.Text.Json.Nodes;
 using Sveda.Client;
 
 namespace Sveda.Host;
@@ -13,6 +14,7 @@ public sealed class HostManager
     private Func<string, Task<HostAuth?>>? verifyBearerUsing;
     private Func<object?, bool>? authorizeUsing;
     private Func<object?, Task>? afterAuthenticateUsing;
+    private bool mintTokenUsingConfigured;
     private readonly List<IHostTool> registeredTools = [];
 
     public HostManager(HostManagerOptions? options = null, McpTokenStore? tokenStore = null)
@@ -42,7 +44,11 @@ public sealed class HostManager
 
     public void VisitorIdUsing(Func<object?, string> callback) => visitorIdUsing = callback;
 
-    public void MintTokenUsing(Func<object?, Task<string>> callback) => mintTokenUsing = callback;
+    public void MintTokenUsing(Func<object?, Task<string>> callback)
+    {
+        mintTokenUsing = callback;
+        mintTokenUsingConfigured = true;
+    }
 
     public void VerifyBearerUsing(Func<string, Task<HostAuth?>> callback) => verifyBearerUsing = callback;
 
@@ -79,6 +85,18 @@ public sealed class HostManager
 
         return value.Trim();
     }
+
+    public IReadOnlyDictionary<string, bool> RegisteredHooks()
+        => new Dictionary<string, bool>
+        {
+            ["resolve_tools"] = resolveToolsUsing is not null,
+            ["policy"] = policyUsing is not null,
+            ["authorize"] = authorizeUsing is not null,
+            ["visitor_id"] = visitorIdUsing is not null,
+            ["mint_token"] = mintTokenUsingConfigured,
+        };
+
+    public JsonObject Describe(object? user = null) => HostManifest.Describe(this, user);
 
     public bool IsConfigured()
         => !string.IsNullOrWhiteSpace(options.BaseUrl) && !string.IsNullOrWhiteSpace(options.HostApiKey);

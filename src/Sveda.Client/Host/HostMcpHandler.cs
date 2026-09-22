@@ -104,7 +104,7 @@ public static class HostMcpHandler
         return result;
     }
 
-    private static Dictionary<string, object?> ToMcpTool(IHostTool tool)
+    public static Dictionary<string, object?> ToMcpTool(IHostTool tool)
     {
         var schema = tool.InputSchema.Count == 0
             ? new Dictionary<string, object?> { ["type"] = "object", ["properties"] = new Dictionary<string, object?>() }
