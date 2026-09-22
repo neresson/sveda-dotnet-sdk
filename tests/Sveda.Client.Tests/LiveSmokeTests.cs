@@ -50,6 +50,6 @@ public sealed class LiveSmokeTests
         Assert.False(string.IsNullOrWhiteSpace(message.Explanation));
 
         var histories = await embed.Histories.ListAsync();
-        Assert.True(histories.ContainsKey("histories"));
+        Assert.NotNull(histories["histories"]);
     }
 }
