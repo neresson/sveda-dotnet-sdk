@@ -8,11 +8,7 @@ public sealed class ContractTests
     [Fact]
     public void LocksSidecarContractSurface()
     {
-        var path = Path.Combine("contracts", "sidecar.v1.json");
-        if (!File.Exists(path))
-        {
-            path = Path.Combine("..", "..", "..", "..", "sveda", "packages", "protocol", "contracts", "sidecar.v1.json");
-        }
+        var path = FindSidecarContract();
 
         using var document = JsonDocument.Parse(File.ReadAllText(path));
         var root = document.RootElement;
@@ -22,5 +18,30 @@ public sealed class ContractTests
             "application/vnd.sveda.stream+json",
             root.GetProperty("accept").GetProperty("svedaStream").GetString()
         );
+    }
+
+    private static string FindSidecarContract()
+    {
+        var dir = new DirectoryInfo(AppContext.BaseDirectory);
+        while (dir is not null)
+        {
+            foreach (var relative in new[]
+            {
+                Path.Combine("contracts", "sidecar.v1.json"),
+                Path.Combine("packages", "protocol", "contracts", "sidecar.v1.json"),
+                Path.Combine("sveda", "packages", "protocol", "contracts", "sidecar.v1.json"),
+            })
+            {
+                var candidate = Path.Combine(dir.FullName, relative);
+                if (File.Exists(candidate))
+                {
+                    return candidate;
+                }
+            }
+
+            dir = dir.Parent;
+        }
+
+        throw new FileNotFoundException("sidecar.v1.json");
     }
 }
